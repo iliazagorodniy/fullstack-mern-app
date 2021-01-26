@@ -25,4 +25,19 @@ module.exports = (app) => {
 			'google'
 		)
 	);
+
+	app.get(
+		'/api/logout',
+		(request, response) => {
+			request.logout();
+			response.send(request.user);
+		}
+	);
+
+	app.get(
+		'/api/current_user',
+		(request, response) => {
+			response.send(request.user);
+		}
+	);
 };

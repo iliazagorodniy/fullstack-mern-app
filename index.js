@@ -25,6 +25,8 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieSession = require('cookie-session');
+const passport = require('passport');
 const keys = require('./config/keys');
 
 require('./models/User');
@@ -33,6 +35,16 @@ require('./services/passport');
 mongoose.connect(keys.mongoURI);
 
 const app = express();
+
+app.use(
+	cookieSession({ // cookie config object
+		maxAge: 30 * 24 * 60 * 60 * 1000, // how long cookie gonna live before it expires
+		keys: [keys.cookieKey] // encryption keys, we dont want them to be commited so theyre locateed inside the "config/keys.js"
+	})
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 require('./routes/authRoutes')(app);
 

@@ -15,6 +15,10 @@
 	// и коллбэк, в котором прописыватся, что делать при аутентификации через стратегию гугл
 // комментарий *7
 	// (Посмотреть доки как работает GoogleStrategy) получили от гугла переменную profile с данными о профиле пользователя
+	// аргумент "done" говорит о том, что процесс аутентификации завершен. Вызывем функцию done:
+	// done(
+		// errorObject - указывается если что-то пошло не по плану,
+		// userRecord - указывает passport.js (либе) что пользователь создан, все круто и мы полностью закончили)
 // комментарий *8
 	// Используем класс User чтобы запустить запрос к базе монго. Будем искать среди всех записей в коллекции.
 	// Нужно найти ОДНУ запись, где googleId === profile.id.
@@ -30,6 +34,17 @@ const keys = require('../config/keys'); // комментарий *4
 
 const User = mongoose.model('users'); // комментарий *5
 
+passport.serializeUser((userModel, done) => {
+	done(null, userModel.id)
+});
+
+passport.deserializeUser((id, done) => {
+	User.findById(id)
+		.then(user => {
+			done(null, user)
+		});
+})
+
 passport.use(
 	new GoogleStrategy( // комментарий *6
 		{
@@ -37,15 +52,17 @@ passport.use(
 			clientSecret: keys.googleClientSecret,
 			callbackURL: '/auth/google/callback'
 		},
-		(accessToken, refreshToken, profile) => { // комментарий *7
+		(accessToken, refreshToken, profile, done) => { // комментарий *7
 			console.log('profile nigga: ', profile);
 			User.findOne({ googleId: profile.id }) // комментарий *8
 				.then((existingUser) => { // в цепочке промисов результат запишется в данную переменную, если такой пользователь найдется в бд
 					if (existingUser) {
+						done(null, existingUser);
 						// we already have a record with given profile id
-					} else {
-						// we dont have such a user so make a new record
-						new User({ googleId: profile.id }).save(); // комментарий *9
+					} else { // если мы не нашли пользователя, значит записи нет и existingUser будет равно "null"
+						new User({ googleId: profile.id })
+							.save() // комментарий *9
+							.then(savedUser => done(null, savedUser));
 					}
 				})
 		}
