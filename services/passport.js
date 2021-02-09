@@ -53,19 +53,15 @@ passport.use(
 			callbackURL: '/auth/google/callback',
 			proxy: true
 		},
-		(accessToken, refreshToken, profile, done) => { // комментарий *7
-			console.log('profile nigga: ', profile);
-			User.findOne({ googleId: profile.id }) // комментарий *8
-				.then((existingUser) => { // в цепочке промисов результат запишется в данную переменную, если такой пользователь найдется в бд
-					if (existingUser) {
-						done(null, existingUser);
-						// we already have a record with given profile id
-					} else { // если мы не нашли пользователя, значит записи нет и existingUser будет равно "null"
-						new User({ googleId: profile.id })
-							.save() // комментарий *9
-							.then(savedUser => done(null, savedUser));
-					}
-				})
+		async (accessToken, refreshToken, profile, done) => { // комментарий *7
+			const existingUser = await User.findOne({ googleId: profile.id })
+
+			if (existingUser) {			// we already have a record with given profile id
+				return done(null, existingUser);
+			}
+
+			const savedUser = await new User({ googleId: profile.id }).save() // комментарий *9
+			done(null, savedUser)
 		}
 	)
 );
