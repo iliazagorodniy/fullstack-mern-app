@@ -51,5 +51,11 @@ app.use(passport.session());
 require('./routes/authRoutes')(app);
 require('./routes/billingRoutes')(app)
 
+if (process.env.NODE_ENV === "production") {
+	// express должен обслуживать файлы в продакшене, например main.js или main.css
+
+	// express должен обслуживать файл index.html если он (экспресс) не распознает указанный путь
+}
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT);
